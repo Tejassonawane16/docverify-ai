@@ -7,6 +7,7 @@ from sqlalchemy import select
 from app.config import get_settings
 from app.database import Base, SessionLocal, engine
 from app.models import Role, User
+from app.routers import auth
 from app.security import hash_password
 
 
@@ -47,6 +48,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(auth.router)
 
 
 @app.get("/api/health", tags=["system"])
