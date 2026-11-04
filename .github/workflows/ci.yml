@@ -89,6 +89,10 @@ jobs:
           curl -fsS http://localhost:8080/ | grep -q "DocVerify AI"
           curl -fsS http://localhost:8080/api/health
           curl -fsS http://localhost:8000/api/health
+          # Register an applicant through the frontend proxy
+          curl -fsS -X POST http://localhost:8080/api/auth/register \
+            -H "Content-Type: application/json" \
+            -d '{"email":"ci@example.com","full_name":"CI Test","password":"Ci-Password-123"}'
       - name: Show logs on failure
         if: failure()
         run: docker compose logs
