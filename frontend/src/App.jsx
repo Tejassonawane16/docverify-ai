@@ -4,10 +4,8 @@ import { Layout, RequireRole } from './components/common'
 import { homeFor } from './labels'
 import { AdminAudit, AdminUsers } from './pages/Admin'
 import { LoginPage, RegisterPage } from './pages/AuthPages'
-
-function ComingSoon() {
-  return <p className="muted">This page is part of the next sprint.</p>
-}
+import MyDocuments from './pages/MyDocuments'
+import { ReviewDashboard, ReviewDetail } from './pages/Review'
 
 function Home() {
   const { user, loading } = useAuth()
@@ -23,10 +21,11 @@ export default function App() {
       <Route element={<RequireRole />}>
         <Route element={<Layout />}>
           <Route element={<RequireRole roles={['applicant']} />}>
-            <Route path="/documents" element={<ComingSoon />} />
+            <Route path="/documents" element={<MyDocuments />} />
           </Route>
           <Route element={<RequireRole roles={['reviewer', 'admin']} />}>
-            <Route path="/review" element={<ComingSoon />} />
+            <Route path="/review" element={<ReviewDashboard />} />
+            <Route path="/review/:id" element={<ReviewDetail />} />
           </Route>
           <Route element={<RequireRole roles={['admin']} />}>
             <Route path="/admin/users" element={<AdminUsers />} />
