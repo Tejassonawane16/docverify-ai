@@ -1,0 +1,72 @@
+# DocVerify AI - start everything with:  docker compose up --build
+name: docverify
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-docverify}
+      POSTGRES_USER: ${POSTGRES_USER:-docverify}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-docverify}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.5
+    volumes:
+      - qdrant-data:/qdrant/storage
+    ports:
+      - "6333:6333"
+    restart: unless-stopped
+
+  ai-service:
+    build: ./ai-service
+    environment:
+      QDRANT_URL: http://qdrant:6333
+      LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
+      LLM_MODEL: ${LLM_MODEL:-llama3.1:8b}
+      CONFIDENCE_THRESHOLD: ${CONFIDENCE_THRESHOLD:-70}
+      TOP_K: ${TOP_K:-4}
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-docverify}:${POSTGRES_PASSWORD:-docverify}@db:5432/${POSTGRES_DB:-docverify}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-for-anything-real-0123456789}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@docverify.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-ChangeMe-Admin-123}
+      AI_SERVICE_URL: http://ai-service:8001
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  qdrant-data:
+  uploads:
