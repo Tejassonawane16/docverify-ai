@@ -7,7 +7,7 @@ from sqlalchemy import select
 from app.config import get_settings
 from app.database import Base, SessionLocal, engine
 from app.models import Role, User
-from app.routers import admin, auth
+from app.routers import admin, auth, documents, review
 from app.security import hash_password
 
 
@@ -50,6 +50,8 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(documents.router)
+app.include_router(review.router)
 app.include_router(admin.router)
 
 
